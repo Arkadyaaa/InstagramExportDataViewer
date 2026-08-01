@@ -1,0 +1,55 @@
+.topbar{
+
+    height:70px;
+
+    background:var(--surface);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 30px;
+
+    border-bottom:1px solid var(--border);
+}
+
+.logo{
+
+    font-size:22px;
+    font-weight:bold;
+
+}
+
+.topbar nav{
+
+    display:flex;
+    gap:10px;
+
+}
+
+.topbar button{
+
+    background:transparent;
+    color:var(--text);
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+}
+
+.topbar button:hover{
+
+    background:var(--surface2);
+
+}
+
+.topbar button.active{
+
+    background:var(--accent);
+
+}

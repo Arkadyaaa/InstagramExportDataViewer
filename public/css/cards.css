@@ -1,0 +1,66 @@
+.card {
+	display: flex;
+	gap: 16px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 16px;
+	transition: 0.2s;
+}
+
+.card:hover {
+	transform: translateY(-2px);
+	background: var(--surface2);
+}
+
+.avatar {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.info {
+	flex: 1;
+}
+
+.name {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.username {
+	color: var(--sub);
+
+	margin-top: 3px;
+	margin-bottom: 12px;
+}
+
+.actions {
+	margin-top: 15px;
+
+	display: flex;
+
+	gap: 10px;
+}
+
+.actions a {
+	text-decoration: none;
+	background: var(--accent);
+	color: white;
+	padding: 8px 14px;
+	border-radius: 8px;
+}
+
+.actions button {
+	background: #2f3542;
+	color: white;
+	border: none;
+	padding: 8px 14px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.url a {
+	color: var(--accent);
+}
