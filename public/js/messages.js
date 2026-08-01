@@ -7,8 +7,7 @@ function initializeMessages(folder = "inbox") {
 	const title = document.getElementById("chatListTitle");
 
 	if (title) {
-		title.textContent =
-			folder === "inbox" ? "Inbox" : "Message Requests";
+		title.textContent = folder === "inbox" ? "Inbox" : "Message Requests";
 	}
 
 	loadChatList(folder);
@@ -39,7 +38,7 @@ async function loadChatList(folder) {
 
 		button.onclick = () => {
 			list.querySelectorAll(".chatItem").forEach((b) =>
-				b.classList.remove("selected")
+				b.classList.remove("selected"),
 			);
 
 			button.classList.add("selected");
@@ -52,16 +51,74 @@ async function loadChatList(folder) {
 }
 
 async function loadChat(folder, chatId, chatTitle) {
-    currentChat = chatId;
+	currentChat = chatId;
 
-    const response = await fetch(`/api/messages/${folder}/${chatId}`);
-    const messages = await response.json();
+	const response = await fetch(`/api/messages/${folder}/${chatId}`);
+	const messages = await response.json();
 
-    document.getElementById("chatTitle").textContent = chatTitle ?? chatId;
-    document.getElementById("messageCount").textContent =
-        `${messages.length} Messages`;
+	// Includes username in chat. Removed as this method is unreliable sometimes result in wrong username for the user
+	// const title = chatTitle ?? chatId;
+	// const username = await getUsernameByName(title);
 
-    await renderMessages(messages);
+	// document.getElementById("chatTitle").innerHTML = `
+	//     ${title}
+	//     ${username ? `<span class="chatUsername">@${username}</span>` : ""}
+	// `;
+
+	document.getElementById("chatTitle").textContent = chatTitle ?? chatId;
+	
+	document.getElementById("folderName").textContent = "/messages/" + folder + "/" + chatId;
+	document.getElementById("folderName").onclick = () => navigator.clipboard.writeText(chatId);
+
+	document.getElementById("messageCount").textContent =
+		`${messages.length} Messages`;
+
+	await renderMessages(messages);
+}
+
+function getOwnerName() {
+	let name = localStorage.getItem("ownerDisplayName");
+
+	if (!name) {
+		name = prompt(
+			"Enter your Instagram display name exactly as it appears on your own sent messages:",
+		);
+
+		if (name) {
+			name = name.trim();
+			localStorage.setItem("ownerDisplayName", name);
+		}
+	}
+
+	return name;
+}
+
+function isFromOwner(message) {
+	const ownerName = getOwnerName();
+
+	if (!ownerName || !message.sender_name) return false;
+
+	return message.sender_name.trim().toLowerCase() === ownerName.toLowerCase();
+}
+
+function buildReactionsHtml(reactions) {
+	if (!reactions || !reactions.length) return "";
+
+	const grouped = new Map();
+
+	reactions.forEach(({ reaction, actor }) => {
+		if (!grouped.has(reaction)) grouped.set(reaction, []);
+		grouped.get(reaction).push(actor);
+	});
+
+	const pills = [...grouped.entries()]
+		.map(([emoji, actors]) => {
+			const count = actors.length > 1 ? ` ${actors.length}` : "";
+			return `<span class="reactionPill" title="${actors.join(", ")}">${emoji}${count}</span>`;
+		})
+		.join("");
+
+	return `<div class="messageReactions">${pills}</div>`;
 }
 
 async function renderMessages(messages) {
@@ -70,36 +127,36 @@ async function renderMessages(messages) {
 	container.innerHTML = "";
 
 	if (messages.length === 0) {
-		container.innerHTML =
-			'<div class="emptyState">No messages.</div>';
+		container.innerHTML = '<div class="emptyState">No messages.</div>';
+
 		return;
 	}
 
 	for (const message of messages) {
-		const div = document.createElement("div");
+		const fromOwner = isFromOwner(message);
 
-		div.className =
-			"message " +
-			(message.is_from_owner ? "sent" : "received");
+		const row = document.createElement("div");
+		row.className = "messageRow " + (fromOwner ? "sent" : "received");
 
 		const username = await getUsernameByName(message.sender_name);
 
-		div.innerHTML = `
-			<div class="messageSender">
-				${message.sender_name ?? ""}
-				${username ? `<span class="messageUsername">@${username}</span>` : ""}
-			</div>
+		const senderHtml =
+			`<div class="messageSender">${message.sender_name ?? ""}` +
+			`</div>`;
 
-			<div class="messageText">
-				${message.content ?? ""}
-			</div>
+		const bubble = document.createElement("div");
+		bubble.className = "message " + (fromOwner ? "sent" : "received");
+		bubble.innerHTML =
+			`<div class="messageText">${message.content ?? ""}</div>` +
+			buildReactionsHtml(message.reactions);
 
-			<div class="messageTime">
-				${new Date(message.timestamp_ms).toLocaleString()}
-			</div>
-		`;
+		const timeHtml = `<div class="messageTime">${new Date(message.timestamp_ms).toLocaleString()}</div>`;
 
-		container.appendChild(div);
+		row.insertAdjacentHTML("beforeend", senderHtml);
+		row.appendChild(bubble);
+		row.insertAdjacentHTML("beforeend", timeHtml);
+
+		container.appendChild(row);
 	}
 
 	container.scrollTop = container.scrollHeight;
@@ -130,7 +187,7 @@ async function loadMessageSidebar() {
 
 		button.onclick = async () => {
 			list.querySelectorAll("button").forEach((b) =>
-				b.classList.remove("selected")
+				b.classList.remove("selected"),
 			);
 
 			button.classList.add("selected");
