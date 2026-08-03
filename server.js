@@ -112,3 +112,14 @@ app.get("/api/messages/:type/:id", (req, res) => {
     res.json(messages);
 
 });
+
+app.use(
+	"/your_instagram_activity",
+	express.static(
+		path.join(
+			__dirname,
+			"data",
+			"your_instagram_activity"
+		)
+	)
+);

@@ -3,18 +3,22 @@
 		<h3>Messages</h3>
 
 		<div class="chatSidebar">
-            <div id="chatItems" class="chatItems">
-                <div class="emptyState">
-                    Loading conversations...
-                </div>
-            </div>
+			<div id="chatItems" class="chatItems">
+				<div class="emptyState">Loading conversations...</div>
+			</div>
 		</div>
 	</aside>
 
 	<main id="conversation">
 		<div class="conversationHeader">
-			<h3 id="chatTitle">Select a conversation</h3>
-			<span id="messageCount"></span>
+			<div class="conversationHeaderLeft">
+				<h3 id="chatTitle">Select a conversation</h3>
+				<span id="messageCount"></span>
+			</div>
+
+			<button id="mediaButton" class="iconButton" title="Media">
+				<i class="mdi mdi-image-multiple"></i>
+			</button>
 		</div>
 
 		<div class="conversationSecondaryHeader">
@@ -22,7 +26,43 @@
 		</div>
 
 		<div id="messages" class="messages">
-			<div class="emptyState">Select a conversation to view messages.</div>
+			<div class="emptyState">
+				Select a conversation to view messages.
+			</div>
+		</div>
+
+		<div id="mediaViewer" onclick="closeMediaViewer()">
+
+			<img
+				id="viewerImage"
+				style="display:none"
+				onclick="event.stopPropagation()"
+			>
+
+			<video
+				id="viewerVideo"
+				controls
+				autoplay
+				style="display:none"
+				onclick="event.stopPropagation()"
+			></video>
+
 		</div>
 	</main>
+
+	<aside id="mediaSidebar" class="mediaSidebar">
+		<div class="mediaHeader">
+			<h3>Media</h3>
+
+			<button class="iconButton" onclick="toggleMediaSidebar()">
+				<i class="mdi mdi-close"></i>
+			</button>
+		</div>
+
+		<h4>Photos</h4>
+		<div id="photoGrid" class="mediaGrid"></div>
+
+		<h4>Videos</h4>
+		<div id="videoGrid" class="mediaGrid"></div>
+	</aside>
 </div>

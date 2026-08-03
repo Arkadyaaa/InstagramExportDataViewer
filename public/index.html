@@ -10,6 +10,7 @@
 		<link rel="stylesheet" href="css/sidebar.css" />
 		<link rel="stylesheet" href="css/messages.css" />
 		<link rel="stylesheet" href="css/cards.css" />
+		<link rel="stylesheet" href="css/profile_changes.css" />
 		<link
 			rel="stylesheet"
 			href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css"
@@ -50,6 +51,18 @@
 						Loading...
 					</div>
 				</div>
+
+				<div class="dropdown">
+					<button class="dropdown-toggle">
+						<i class="mdi mdi-account"></i>
+						Personal Information
+						<i class="mdi mdi-chevron-down"></i>
+					</button>
+
+					<div id="personalInformationFiles" class="dropdown-content">
+						Loading...
+					</div>
+				</div>
 			</aside>
 
 			<main id="mainContent"></main>
@@ -61,18 +74,28 @@
 				const content = dropdown.querySelector(".dropdown-content");
 
 				button.addEventListener("click", () => {
-					content.classList.toggle("open");
+					const isOpen = content.classList.contains("open");
+
+					document.querySelectorAll(".dropdown-content").forEach((c) => {
+						c.classList.remove("open");
+					});
+
+					if (!isOpen) {
+						content.classList.add("open");
+					}
 				});
 			});
 
 			document.addEventListener("DOMContentLoaded", () => {
 				loadMessageSidebar();
+    			loadPersonalInformationSidebar();
 			});
 		</script>
 
 
 		<script src="js/connections.js"></script>
 		<script src="js/messages.js"></script>
+		<script src="js/profile_changes.js"></script>
 		<script src="js/app.js"></script>
 
 		<script>

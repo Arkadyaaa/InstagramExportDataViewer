@@ -1,4 +1,4 @@
-async function loadScreen(screen) {
+async function loadScreen(screen, data = null) {
     const response = await fetch(`/screens/${screen}.html`);
     const html = await response.text();
 
@@ -6,14 +6,15 @@ async function loadScreen(screen) {
 
     switch (screen) {
         case "connectionsScreen":
-            initializeConnections();
+            initializeConnections(data);
             break;
 
         case "messageScreen":
+            initializeMessages(data);
             break;
 
-        case "postsScreen":
-            initializePosts();
+        case "profileChangesScreen":
+            initializeProfileChanges(data);
             break;
     }
 }

@@ -34,7 +34,6 @@ body {
 
 main {
 	flex: 1;
-	padding: 30px;
 	overflow: auto;
 }
 
@@ -76,4 +75,8 @@ main {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
 	gap: 20px;
+}
+
+.padContent {
+	padding: 30px;
 }

@@ -20,4 +20,10 @@ module.exports = {
         "messages",
         "inbox"
     ),
+
+    personal_information: path.join(
+        DATA_DIR,
+        "personal_information",
+        "personal_information"
+    ),
 };

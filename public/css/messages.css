@@ -1,6 +1,5 @@
 .messageSidebar {
 	width: 240px;
-    height: 90%;
     overflow: auto;
     
 	background: var(--surface);
@@ -107,6 +106,49 @@
 	white-space: pre-wrap;
 }
 
+.messageAttachment {
+	font-size: 0.85rem;
+	white-space: pre-wrap;
+  	font-style: italic;
+	color: var(--sub);
+}
+
+.messagePhoto {
+	margin-top: 8px;
+}
+
+.messagePhoto img {
+	max-width: 300px;
+	max-height: 400px;
+	border-radius: 10px;
+	display: block;
+	cursor: pointer;
+}
+
+.messageGif {
+	margin-top: 8px;
+}
+
+.messageGif img {
+	max-width: 150px;
+	max-height: 200px;
+	border-radius: 10px;
+	display: block;
+	cursor: pointer;
+}
+
+.messageVideo {
+	margin-top: 8px;
+}
+
+.messageVideo video {
+	max-width: 320px;
+	max-height: 500px;
+	border-radius: 10px;
+	display: block;
+	background: #000;
+}
+
 .messageTime {
 	font-size: 0.7rem;
 	margin-top: 10px;
@@ -181,4 +223,86 @@
 	font-size: 0.85em;
 	color: var(--sub);
 	margin-left: 6px;
+}
+
+#mediaViewer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#mediaViewer.open {
+    display: flex;
+}
+
+#mediaViewer img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+}
+
+/* Media Sidebar */
+
+.mediaSidebar {
+    width: 320px;
+    border-left: 1px solid #333;
+    background: #181818;
+    display: none;
+    overflow-y: auto;
+}
+
+.mediaSidebar.open {
+    display: block;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+}
+
+.messageSidebar {
+    width: 300px;
+}
+
+#conversation {
+    flex: 1;
+}
+
+.mediaSidebar {
+    width: 320px;
+    border-left: 1px solid #333;
+    background: #181818;
+    display: none;
+    overflow-y: auto;
+}
+
+.mediaSidebar.open {
+    display: block;
+}
+
+.iconButton {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+.mediaGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+}
+
+.mediaGrid img,
+.mediaGrid video {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
 }

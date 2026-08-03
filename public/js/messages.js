@@ -1,5 +1,6 @@
 let currentFolder = "inbox";
 let currentChat = null;
+let ownerDisplayNames = null;
 
 function initializeMessages(folder = "inbox") {
 	currentFolder = folder;
@@ -8,6 +9,12 @@ function initializeMessages(folder = "inbox") {
 
 	if (title) {
 		title.textContent = folder === "inbox" ? "Inbox" : "Message Requests";
+	}
+
+	const mediaButton = document.getElementById("mediaButton");
+
+	if (mediaButton) {
+		mediaButton.onclick = toggleMediaSidebar;
 	}
 
 	loadChatList(folder);
@@ -74,31 +81,30 @@ async function loadChat(folder, chatId, chatTitle) {
 		`${messages.length} Messages`;
 
 	await renderMessages(messages);
+	await renderMedia(messages);
 }
 
-function getOwnerName() {
-	let name = localStorage.getItem("ownerDisplayName");
+async function getOwnerName() {
 
-	if (!name) {
-		name = prompt(
-			"Enter your Instagram display name exactly as it appears on your own sent messages:",
-		);
-
-		if (name) {
-			name = name.trim();
-			localStorage.setItem("ownerDisplayName", name);
-		}
+	if (ownerDisplayNames) {
+		return ownerDisplayNames;
 	}
 
-	return name;
+	const usernames = await getOwnerDisplayNames();
+
+	return usernames;
 }
 
-function isFromOwner(message) {
-	const ownerName = getOwnerName();
+async function isFromOwner(message) {
 
-	if (!ownerName || !message.sender_name) return false;
+	if (!message.sender_name)
+		return false;
 
-	return message.sender_name.trim().toLowerCase() === ownerName.toLowerCase();
+	const names = await getOwnerName();
+
+	return names.has(
+		message.sender_name.trim()
+	);
 }
 
 function buildReactionsHtml(reactions) {
@@ -121,6 +127,90 @@ function buildReactionsHtml(reactions) {
 	return `<div class="messageReactions">${pills}</div>`;
 }
 
+function buildMessage(message){
+	let html = "";
+
+	// Text
+	if (message.content) {
+		html += `<div class="messageText">${message.content}</div>`;
+	}
+
+	// Photos
+	if (message.photos?.length) {
+		message.photos.forEach((photo) => {
+			html += `
+				<div class="messagePhoto">
+					<img
+						src="/${photo.uri}"
+						alt="Photo"
+						loading="lazy"
+    					decoding="async"
+            			onclick="openMediaViewer('/${photo.uri}', 'image')"
+					>
+				</div>
+			`;
+		});
+	}
+
+	// Gifs
+	if (message.gifs?.length) {
+		message.gifs.forEach((gif) => {
+			html += `
+				<div class="messageGif">
+					<img
+						src="/${gif.uri}"
+						alt="Photo"
+						loading="lazy"
+    					decoding="async"
+					>
+				</div>
+			`;
+		});
+	}
+
+	// Videos
+	if (message.videos?.length) {
+		message.videos.forEach((video) => {
+			html += `
+				<div class="messageVideo">
+					<a class="messageAttachment">Sent a video</a>
+					<video
+						preload="metadata"
+						muted
+						onclick="openMediaViewer('/${video.uri}', 'video')"
+					>
+						<source src="/${video.uri}">
+					</video>
+				</div>
+			`;
+		});
+	}
+
+	// Audio
+	if (message.audio_files?.length) {
+		message.audio_files.forEach((audio) => {
+			html += `
+				<div class="messageAudio">
+					<audio controls preload="none">
+						<source src="/${audio.uri}">
+						Your browser does not support audio playback.
+					</audio>
+				</div>
+			`;
+		});
+	}
+
+	// If none of the above, show unavailable
+	if (html.length == 0){
+		html += `<div class="messageAttachment">Unavailable</div>`;
+	}
+
+	// Reactions
+	html += buildReactionsHtml(message.reactions);
+
+	return html;
+}
+
 async function renderMessages(messages) {
 	const container = document.getElementById("messages");
 
@@ -133,7 +223,7 @@ async function renderMessages(messages) {
 	}
 
 	for (const message of messages) {
-		const fromOwner = isFromOwner(message);
+		const fromOwner = await isFromOwner(message);
 
 		const row = document.createElement("div");
 		row.className = "messageRow " + (fromOwner ? "sent" : "received");
@@ -146,9 +236,7 @@ async function renderMessages(messages) {
 
 		const bubble = document.createElement("div");
 		bubble.className = "message " + (fromOwner ? "sent" : "received");
-		bubble.innerHTML =
-			`<div class="messageText">${message.content ?? ""}</div>` +
-			buildReactionsHtml(message.reactions);
+		bubble.innerHTML = buildMessage(message);
 
 		const timeHtml = `<div class="messageTime">${new Date(message.timestamp_ms).toLocaleString()}</div>`;
 
@@ -199,4 +287,82 @@ async function loadMessageSidebar() {
 
 		list.appendChild(button);
 	});
+}
+
+function openMediaViewer(src, type = "image") {
+
+    const viewer = document.getElementById("mediaViewer");
+    const image = document.getElementById("viewerImage");
+    const video = document.getElementById("viewerVideo");
+
+    image.style.display = "none";
+    video.style.display = "none";
+
+    if (type === "image") {
+        image.src = src;
+        image.style.display = "block";
+    } else {
+        video.src = src;
+        video.style.display = "block";
+        video.load();
+        video.play();
+    }
+
+    viewer.classList.add("open");
+}
+
+function closeMediaViewer() {
+
+    const viewer = document.getElementById("mediaViewer");
+    const video = document.getElementById("viewerVideo");
+
+    video.pause();
+    video.currentTime = 0;
+
+    viewer.classList.remove("open");
+}
+
+function toggleMediaSidebar() {
+    document
+        .getElementById("mediaSidebar")
+        .classList.toggle("open");
+}
+
+function renderMedia(messages) {
+
+    const photos = document.getElementById("photoGrid");
+    const videos = document.getElementById("videoGrid");
+
+    photos.innerHTML = "";
+    videos.innerHTML = "";
+
+    messages.forEach(message => {
+
+        message.photos?.forEach(photo => {
+
+            photos.innerHTML += `
+                <img
+                    src="/${photo.uri}"
+                    onclick="openMediaViewer('/${photo.uri}')"
+                >
+            `;
+
+        });
+
+        message.videos?.forEach(video => {
+
+            videos.innerHTML += `
+                <video
+					preload="metadata"
+					muted
+					onclick="openMediaViewer('/${video.uri}', 'video')"
+				>
+					<source src="/${video.uri}">
+				</video>
+            `;
+
+        });
+
+    });
+
 }
