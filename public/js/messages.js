@@ -42,23 +42,50 @@ async function loadChatList(folder) {
 
 		button.className = "chatItem";
 		button.textContent = chat.title;
+		button.dataset.chatId = chat.id;
 
 		button.onclick = () => {
-			list.querySelectorAll(".chatItem").forEach((b) =>
-				b.classList.remove("selected"),
-			);
-
-			button.classList.add("selected");
-
+    		selectChatItem(chat.id);
 			loadChat(folder, chat.id, chat.title);
 		};
 
 		list.appendChild(button);
 	});
+	
+
+    if (list.querySelector(".chatItem")) {
+        list.querySelector(".chatItem").classList.add("selected");
+
+        loadChat(folder, chats[0].id, chats[0].title);
+    }
+	
+	// Search
+	const searchInput = document.getElementById("messageSearch");
+	const searchBtn = document.getElementById("startSearch");
+	const exactMatc = document.getElementById("exactMatch").checked;
+
+	let search = "";
+
+	if (searchInput) {
+		searchInput.value = "";
+		searchInput.oninput = (e) => {
+			search = e.target.value.trim();
+		};
+	}
+
+	if (searchBtn) {
+		searchBtn.onclick = () => {
+			if (!search) {
+				return;
+			}
+			searchMessages(search, exactMatch);
+		};
+	}
 }
 
-async function loadChat(folder, chatId, chatTitle) {
+async function loadChat(folder, chatId, chatTitle, targetMessageId = null) {
 	currentChat = chatId;
+	document.getElementById("messages").innerHTML = '<div class="emptyState">Loading Conversation...</div>';
 
 	const response = await fetch(`/api/messages/${folder}/${chatId}`);
 	const messages = await response.json();
@@ -72,16 +99,267 @@ async function loadChat(folder, chatId, chatTitle) {
 	//     ${username ? `<span class="chatUsername">@${username}</span>` : ""}
 	// `;
 
-	document.getElementById("chatTitle").textContent = chatTitle ?? chatId;
+	const chatTitleHTML = document.getElementById("chatTitle");
+	document.getElementById("mediaButton").style.display = "block";
 	
-	document.getElementById("folderName").textContent = "/messages/" + folder + "/" + chatId;
-	document.getElementById("folderName").onclick = () => navigator.clipboard.writeText(chatId);
+	const icon = document.createElement("i");
+	icon.className = "mdi mdi-folder linkColor";
+
+	chatTitleHTML.textContent = "";
+	chatTitleHTML.appendChild(
+		document.createTextNode((chatTitle ?? chatId) + " ")
+	);
+	chatTitleHTML.appendChild(icon);
+
+	chatTitleHTML.onclick = () => {
+		navigator.clipboard.writeText(chatId);
+		alert("Chat ID copied to clipboard!");
+	};
 
 	document.getElementById("messageCount").textContent =
 		`${messages.length} Messages`;
 
 	await renderMessages(messages);
 	await renderMedia(messages);
+
+	if (targetMessageId !== null) {
+		const target = document.querySelector(
+			`[data-message-id="${targetMessageId}"]`
+		);
+
+		if (target) {
+			requestAnimationFrame(() => {
+				target.scrollIntoView({
+					behavior: "auto",
+					block: "center"
+				});
+			});
+
+			target.classList.add("searchHighlight");
+
+			setTimeout(() => {
+				target.classList.remove("searchHighlight");
+			}, 2000);
+		}
+	}
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightTerm(text, query) {
+    if (!text) return text;
+    try {
+        const re = new RegExp(`(${escapeRegExp(query)})`, "ig");
+        return text.replace(re, "<mark>$1</mark>");
+    } catch (e) {
+        return text;
+    }
+}
+
+async function searchMessages(query, exact) {
+	if (!query || !query.trim()) return;
+
+	// replace top bar
+	document.getElementById("chatTitle").textContent = "Searching for: " + "\"" + query + "\"";
+	document.getElementById("messageCount").textContent = "";
+	document.getElementById("mediaButton").style.display = "none";
+
+	document.getElementById("messages").innerHTML = '<div class="emptyState">Searching...</div>';
+
+	// remove selection from chat list
+	const list = document.getElementById("chatItems");
+    const buttons = list.querySelectorAll(".chatItem");
+
+    buttons.forEach((button) => {
+        button.classList.remove("selected");
+    });
+
+	// Perform search across all conversations in the current folder
+	await searchAllConversations(query, exact);
+}
+
+async function searchAllConversations(query, exact) {
+	const folder = currentFolder || "inbox";
+
+	// fetch conversation list
+	const resp = await fetch(`/api/messages/${folder}`);
+	const conversations = await resp.json();
+
+	// fetch all conversations messages in parallel
+	const fetches = conversations.map((c) =>
+		fetch(`/api/messages/${folder}/${c.id}`).then((r) =>
+			r.ok ? r.json().then((msgs) => ({ convo: c, msgs })) : { convo: c, msgs: [] },
+		),
+	);
+
+	const all = await Promise.all(fetches);
+
+	// Flatten with conversation refs
+	const flattened = [];
+
+	for (const item of all) {
+		const convo = item.convo;
+		const msgs = item.msgs || [];
+
+		for (const m of msgs) {
+			const copy = Object.assign({}, m);
+			copy._conversationId = convo.id;
+			copy._conversationTitle = convo.title ?? convo.id;
+			flattened.push(copy);
+		}
+	}
+
+	const q = query.trim().toLowerCase();
+
+	const filtered = flattened
+		.filter((m) => {
+			const content = (m.content || "").toLowerCase();
+
+			if(exact) {
+				const regex = new RegExp(
+					`(?:^|[^\\p{L}\\p{N}_])${escapeRegExp(q)}(?:$|[^\\p{L}\\p{N}_])`,
+					"iu"
+				);
+
+				return regex.test(content)
+			}
+			
+			return content.includes(q)
+		})
+		.map((m) => {
+			const copy = Object.assign({}, m);
+			if (copy.content) copy.content = highlightTerm(copy.content, query);
+			return copy;
+		});
+
+	renderSearchResults(filtered);
+}
+
+async function renderSearchResults(messages) {
+	const container = document.getElementById("messages");
+
+	container.innerHTML = "";
+
+	if (!messages || messages.length === 0) {
+		container.innerHTML = '<div class="emptyState">No matching messages.</div>';
+		return;
+	}
+
+	// Show results grouped by conversation
+	let currentTitle = "";
+
+	for (const message of messages) {
+		const fromOwner = await isFromOwner(message);
+
+		if (currentTitle !== message._conversationTitle) {
+			const groupDivider = document.createElement("hr");
+			groupDivider.className = "searchConvoGroupDivider";
+			container.appendChild(groupDivider);
+
+			const groupTitle = document.createElement("div");
+			groupTitle.className = "searchConvoGroupTitle";
+			groupTitle.textContent = message._conversationTitle;
+			container.appendChild(groupTitle);
+		}
+
+		currentTitle = message._conversationTitle;
+
+		const row = document.createElement("div");
+		row.className = "messageRow " + (fromOwner ? "sent" : "received") + (message.reactions?.length ? " hasReactions" : "");
+
+		// Sender
+		const sender = document.createElement("div");
+
+		sender.className = "messageSender searchedName";
+
+		sender.textContent = (message.sender_name + " " ?? "");
+
+		sender.onclick = () => {
+			openSearchedChatMessage(message);
+		};
+
+		// Bubble
+		const bubbleContainer = document.createElement("div");
+		bubbleContainer.className = "bubbleContainer";
+
+		const bubble = document.createElement("div");
+		bubble.className = 
+			"message search " + 
+			(fromOwner ? "sent" : "received");
+
+		bubble.innerHTML = 
+			`<div class="messageText"> ${message.content ?? ""} </div>` + 
+			buildReactionsHtml(message.reactions);
+			
+		bubble.onclick = () => {
+			openSearchedChatMessage(message);
+		};
+		
+		const openConv = document.createElement("i");
+		openConv.className = "mdi mdi-link linkColor";
+			
+		openConv.onclick = () => {
+			openSearchedChatMessage(message);
+		};
+		
+		if(!fromOwner) {
+			bubbleContainer.appendChild(bubble);
+			bubbleContainer.appendChild(openConv);
+		} else {
+			bubbleContainer.appendChild(openConv);
+			bubbleContainer.appendChild(bubble);
+		};
+
+		// Timestamp
+		const timeHtml = `<div class="messageTime">${new Date(message.timestamp_ms).toLocaleString()}</div>`;
+
+		row.appendChild(sender);
+		row.appendChild(bubbleContainer);
+		row.insertAdjacentHTML("beforeend", timeHtml);
+
+		container.appendChild(row);
+	}
+
+	container.scrollTop = 0;
+}
+
+function openSearchedChatMessage(message) {
+	selectChatItem(message._conversationId, true);
+
+	loadChat(
+		currentFolder,
+		message._conversationId,
+		message._conversationTitle,
+		message.timestamp_ms
+	);
+}
+
+function selectChatItem(chatId, scroll = false) {
+    const list = document.getElementById("chatItems");
+
+    if (!list) return;
+
+    const buttons = list.querySelectorAll(".chatItem");
+
+    buttons.forEach((button) => {
+        button.classList.toggle(
+            "selected",
+            button.dataset.chatId === chatId
+        );
+
+        if (button.dataset.chatId === chatId) {
+            selectedButton = button;
+        }
+    });
+
+    if (scroll && selectedButton) {
+        selectedButton.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
 }
 
 async function getOwnerName() {
@@ -226,7 +504,8 @@ async function renderMessages(messages) {
 		const fromOwner = await isFromOwner(message);
 
 		const row = document.createElement("div");
-		row.className = "messageRow " + (fromOwner ? "sent" : "received");
+		row.className = "messageRow " + (fromOwner ? "sent" : "received") + (message.reactions?.length ? " hasReactions" : "");
+		row.dataset.messageId = message.timestamp_ms;
 
 		const username = await getUsernameByName(message.sender_name);
 

@@ -1,10 +1,14 @@
 .messageSidebar {
-	width: 240px;
-    overflow: auto;
+	width: 300px;
     
 	background: var(--surface);
 	border-right: 1px solid var(--border);
 	padding: 20px;
+	
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
 }
 
 .messageSidebar h3 {
@@ -84,6 +88,14 @@
 	border-bottom-left-radius: 4px;
 }
 
+.message.search {
+	cursor: pointer;
+}
+
+.message.search:hover {
+	filter: brightness(1.1);
+}
+
 .messageSender {
 	font-size: 0.75rem;
 	font-weight: 600;
@@ -151,7 +163,6 @@
 
 .messageTime {
 	font-size: 0.7rem;
-	margin-top: 10px;
     margin-bottom: 15px;
 	color: var(--sub);
 }
@@ -188,6 +199,10 @@
 	padding-left: 2px;
 }
 
+.messageRow.hasReactions .messageTime {
+    margin-top: 10px;
+}
+
 /* Conversation header */
 .conversationHeader {
 	display: flex;
@@ -216,6 +231,12 @@
     background-color: transparent;
 	border: none;
 	cursor: pointer;
+}
+
+.chatSidebar {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .chatUsername {
@@ -264,10 +285,6 @@
     height: 100%;
 }
 
-.messageSidebar {
-    width: 300px;
-}
-
 #conversation {
     flex: 1;
 }
@@ -289,6 +306,7 @@
     background: transparent;
     cursor: pointer;
     font-size: 22px;
+	color: var(--text);
 }
 
 .mediaGrid {
@@ -305,4 +323,68 @@
     object-fit: cover;
     border-radius: 8px;
     cursor: pointer;
+}
+
+.messageSearch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.messageSidebar .secondaryButton {
+    background: var(--accent);
+	padding: 8px;
+	text-align: center;
+	margin-bottom: 0px;
+}
+
+.messageSidebar .secondaryButton:hover {
+    background: var(--accent-hover);
+}
+
+.searchDivider {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	color: var(--sub2);
+}
+
+.searchConvoGroupDivider {
+	margin-top: 15px;
+	color: var(--sub);
+}
+
+.searchConvoGroupTitle {
+	margin-top: 5px;
+	margin-bottom: 15px;
+	font-weight: bold;
+}
+
+.exactMatch {
+	margin-left: 6px;
+	margin-top: 4px;
+}
+
+.searchedName {
+	cursor: pointer;
+}
+
+.searchHighlight {
+    animation: searchHighlight 3s ease-out;
+	border-radius: 8px;
+}
+
+@keyframes searchHighlight {
+    0% {
+        background: var(--secondary-accent);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+.bubbleContainer {
+	display: flex;
+    align-items: center;
+	gap: 8px;
 }

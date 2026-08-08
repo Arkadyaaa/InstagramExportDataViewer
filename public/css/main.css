@@ -7,8 +7,11 @@
 
 	--text: #ffffff;
 	--sub: #9ca3af;
+	--sub2: #9ca3af79;
 
 	--accent: #3797f0;
+	--accent-hover: #79b5ff;
+	--secondary-accent: #d4f037;
 }
 
 * {
@@ -24,7 +27,7 @@ body {
 		sans-serif;
 	background: var(--bg);
 	color: var(--text);
-	height: 100vh;
+	height: calc(100vh - 70px);
 }
 
 .container {
@@ -48,7 +51,7 @@ main {
 	color: var(--sub);
 }
 
-#search {
+.searchBar {
 	width: 260px;
 	padding: 10px 14px;
 	border: none;
@@ -79,4 +82,84 @@ main {
 
 .padContent {
 	padding: 30px;
+}
+
+.secondaryCheckbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+	color: var(--sub);
+
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Hide native checkbox */
+.secondaryCheckbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Custom checkbox */
+.checkboxBox {
+    position: relative;
+
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+
+    flex-shrink: 0;
+    box-sizing: border-box;
+
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+/* Checked */
+.secondaryCheckbox input[type="checkbox"]:checked + .checkboxBox {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Checkmark */
+.secondaryCheckbox input[type="checkbox"]:checked + .checkboxBox::after {
+    content: "✓";
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Hover */
+.secondaryCheckbox:hover .checkboxBox {
+    border-color: var(--accent);
+}
+
+/* Keyboard accessibility */
+.secondaryCheckbox input[type="checkbox"]:focus-visible + .checkboxBox {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.linkColor {
+	color: var(--accent);
+	cursor: pointer;
 }

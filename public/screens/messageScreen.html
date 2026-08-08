@@ -1,5 +1,20 @@
 <div class="container">
 	<aside class="messageSidebar">
+		<div class="messageSearch">
+			<input class="searchBar" id="messageSearch" placeholder="Search messages..." />
+			<button class="secondaryButton" id="startSearch" title="Start search">Search</button>
+		</div>
+
+		<div class="exactMatch">
+			<label class="secondaryCheckbox" for="exactMatch">
+				<input type="checkbox" id="exactMatch" name="exactMatch">
+				<span class="checkboxBox"></span>
+				<span>Exact Match</span>
+			</label>
+		</div>
+
+		<hr class="searchDivider">
+
 		<h3>Messages</h3>
 
 		<div class="chatSidebar">
@@ -16,13 +31,11 @@
 				<span id="messageCount"></span>
 			</div>
 
-			<button id="mediaButton" class="iconButton" title="Media">
-				<i class="mdi mdi-image-multiple"></i>
-			</button>
-		</div>
-
-		<div class="conversationSecondaryHeader">
-			<button id="folderName"></button>
+			<div class="conversationHeaderRight">
+				<button id="mediaButton" class="iconButton" title="Media">
+					<i class="mdi mdi-image-multiple"></i>
+				</button>
+			</div>
 		</div>
 
 		<div id="messages" class="messages">
