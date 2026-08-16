@@ -62,24 +62,34 @@ async function loadChatList(folder) {
 	// Search
 	const searchInput = document.getElementById("messageSearch");
 	const searchBtn = document.getElementById("startSearch");
-	const exactMatch = document.getElementById("exactMatch").checked;
+	const exactMatchCheckbox = document.getElementById("exactMatch");
 
 	let search = "";
+
+	const performSearch = () => {
+		if (!search) {
+			return;
+		}
+
+		searchMessages(search, exactMatchCheckbox.checked);
+	}
 
 	if (searchInput) {
 		searchInput.value = "";
 		searchInput.oninput = (e) => {
 			search = e.target.value.trim();
 		};
+
+		searchInput.onkeydown = (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				performSearch();
+			}
+		};
 	}
 
 	if (searchBtn) {
-		searchBtn.onclick = () => {
-			if (!search) {
-				return;
-			}
-			searchMessages(search, exactMatch);
-		};
+		searchBtn.onclick = performSearch;
 	}
 }
 
