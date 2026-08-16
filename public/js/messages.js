@@ -62,7 +62,7 @@ async function loadChatList(folder) {
 	// Search
 	const searchInput = document.getElementById("messageSearch");
 	const searchBtn = document.getElementById("startSearch");
-	const exactMatc = document.getElementById("exactMatch").checked;
+	const exactMatch = document.getElementById("exactMatch").checked;
 
 	let search = "";
 
@@ -160,6 +160,8 @@ function highlightTerm(text, query) {
 
 async function searchMessages(query, exact) {
 	if (!query || !query.trim()) return;
+
+	console.log(`Searching for: "${query}" (Exact match: ${exact})`);
 
 	// replace top bar
 	document.getElementById("chatTitle").textContent = "Searching for: " + "\"" + query + "\"";
